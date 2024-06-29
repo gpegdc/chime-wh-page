@@ -5,16 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Send Message to Chime Webhook</title>
     <script>
-        async function sendMessage() {
+        let webhooks = []; // Array to store saved webhooks
+
+        async function addWebhook() {
+            const webhookName = document.getElementById('webhookName').value;
             const webhookUrl = document.getElementById('webhookUrl').value;
+
+            const webhook = {
+                name: webhookName,
+                url: webhookUrl
+            };
+
+            // Simulated saving to an array
+            webhooks.push(webhook);
+
+            // Clear input fields
+            document.getElementById('webhookName').value = '';
+            document.getElementById('webhookUrl').value = '';
+
+            // Update webhook list display
+            updateWebhookList();
+        }
+
+        function removeWebhook(index) {
+            webhooks.splice(index, 1);
+            updateWebhookList();
+        }
+
+        async function sendMessage() {
+            const webhookIndex = document.getElementById('webhookList').selectedIndex;
             const messageContent = document.getElementById('messageContent').value;
+
+            if (webhookIndex === -1) {
+                alert('Please select a webhook to send the message to.');
+                return;
+            }
+
+            const selectedWebhook = webhooks[webhookIndex];
 
             const message = {
                 Content: messageContent
             };
 
             try {
-                const response = await fetch(webhookUrl, {
+                const response = await fetch(selectedWebhook.url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -31,18 +65,41 @@
                 alert('An error occurred: ' + error.message);
             }
         }
+
+        function updateWebhookList() {
+            const selectElement = document.getElementById('webhookList');
+            selectElement.innerHTML = '';
+
+            webhooks.forEach((webhook, index) => {
+                const option = document.createElement('option');
+                option.value = webhook.name;
+                option.text = webhook.name;
+                selectElement.appendChild(option);
+            });
+        }
     </script>
 </head>
 <body>
     <h1>Send Message to Chime Webhook</h1>
-    <form onsubmit="event.preventDefault(); sendMessage();">
-        <label for="webhookUrl">Webhook URL:</label><br>
-        <input type="text" id="webhookUrl" name="webhookUrl" required><br><br>
+    <label for="webhookName">Webhook Name:</label><br>
+    <input type="text" id="webhookName" name="webhookName" required><br><br>
 
-        <label for="messageContent">Message:</label><br>
-        <textarea id="messageContent" name="messageContent" rows="4" cols="50" required></textarea><br><br>
+    <label for="webhookUrl">Webhook URL:</label><br>
+    <input type="text" id="webhookUrl" name="webhookUrl" required><br><br>
 
-        <button type="submit">Send Message</button>
-    </form>
+    <button onclick="addWebhook()">Add Webhook</button><br><br>
+
+    <label for="webhookList">Select Webhook:</label><br>
+    <select id="webhookList" name="webhookList"></select><br><br>
+
+    <label for="messageContent">Message:</label><br>
+    <textarea id="messageContent" name="messageContent" rows="4" cols="50" required></textarea><br><br>
+
+    <button onclick="sendMessage()">Send Message</button>
+
+    <script>
+        // Initial update of webhook list
+        updateWebhookList();
+    </script>
 </body>
 </html>
