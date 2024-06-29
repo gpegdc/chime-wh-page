@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Message to Chime Webhook</title>
+    <script>
+        async function sendMessage() {
+            const webhookUrl = document.getElementById('webhookUrl').value;
+            const messageContent = document.getElementById('messageContent').value;
+
+            const message = {
+                Content: messageContent
+            };
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(message)
+                });
+
+                if (response.ok) {
+                    alert('Message sent successfully!');
+                } else {
+                    alert('Failed to send message. Please check the webhook URL and try again.');
+                }
+            } catch (error) {
+                alert('An error occurred: ' + error.message);
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Send Message to Chime Webhook</h1>
+    <form onsubmit="event.preventDefault(); sendMessage();">
+        <label for="webhookUrl">Webhook URL:</label><br>
+        <input type="text" id="webhookUrl" name="webhookUrl" required><br><br>
+
+        <label for="messageContent">Message:</label><br>
+        <textarea id="messageContent" name="messageContent" rows="4" cols="50" required></textarea><br><br>
+
+        <button type="submit">Send Message</button>
+    </form>
+</body>
+</html>
