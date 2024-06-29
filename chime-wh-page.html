@@ -16,20 +16,87 @@
                 url: webhookUrl
             };
 
-            // Simulated saving to an array
-            webhooks.push(webhook);
+            // Add webhook to GitHub
+            try {
+                const response = await fetch('https://api.github.com/repos/your-username/your-repo/contents/webhooks.json', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'token your-github-access-token',
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Add ${webhookName} webhook`,
+                        content: btoa(JSON.stringify(webhook)), // Encode webhook object to base64
+                        branch: 'main'
+                    })
+                });
 
-            // Clear input fields
-            document.getElementById('webhookName').value = '';
-            document.getElementById('webhookUrl').value = '';
-
-            // Update webhook list display
-            updateWebhookList();
+                if (response.ok) {
+                    webhooks.push(webhook);
+                    updateWebhookList();
+                    alert('Webhook added successfully!');
+                } else {
+                    alert('Failed to add webhook. Please check your GitHub credentials and try again.');
+                }
+            } catch (error) {
+                console.error('Error adding webhook:', error);
+                alert('An error occurred while adding webhook.');
+            }
         }
 
-        function removeWebhook(index) {
+        async function fetchWebhooks() {
+            try {
+                const response = await fetch('https://api.github.com/repos/your-username/your-repo/contents/webhooks.json', {
+                    headers: {
+                        'Authorization': 'token your-github-access-token',
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const content = atob(data.content); // Decode base64 content
+                    webhooks = JSON.parse(content);
+                    updateWebhookList();
+                } else {
+                    console.error('Failed to fetch webhooks:', response.status);
+                }
+            } catch (error) {
+                console.error('Error fetching webhooks:', error);
+            }
+        }
+
+        async function removeWebhook(index) {
+            const webhookToRemove = webhooks[index];
             webhooks.splice(index, 1);
-            updateWebhookList();
+
+            try {
+                const response = await fetch('https://api.github.com/repos/your-username/your-repo/contents/webhooks.json', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'token your-github-access-token',
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Remove ${webhookToRemove.name} webhook`,
+                        content: '',
+                        branch: 'main', // To delete a file, set content to an empty string
+                        sha: webhookToRemove.sha // Get this from the GitHub API when fetching
+                    })
+                });
+
+                if (response.ok) {
+                    updateWebhookList();
+                    alert('Webhook removed successfully!');
+                } else {
+                    alert('Failed to remove webhook. Please check your GitHub credentials and try again.');
+                }
+            } catch (error) {
+                console.error('Error removing webhook:', error);
+                alert('An error occurred while removing webhook.');
+            }
         }
 
         async function sendMessage() {
@@ -77,6 +144,9 @@
                 selectElement.appendChild(option);
             });
         }
+
+        // Fetch webhooks on page load
+        window.onload = fetchWebhooks;
     </script>
 </head>
 <body>
